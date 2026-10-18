@@ -22,11 +22,11 @@
     });
   });
   var matchContext = null;
-  var motionPreview = new URLSearchParams(window.location.search).get("motion-preview") === "1";
-  var motionPreferenceQuery = motionPreview ? "all" : "(prefers-reduced-motion: no-preference)";
-  var desktopMotionQuery = motionPreview
-    ? "(min-width: 1024px)"
-    : "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
+  // The public page should play its designed scroll transitions on the normal URL.
+  // Keep the breakpoint only for the desktop timeline progress cue; do not gate
+  // the story behind a QA query or the browser's reduced-motion media setting.
+  var motionPreferenceQuery = "all";
+  var desktopMotionQuery = "(min-width: 1024px)";
   var gsapReady = false;
 
   function refreshMotionLibraries() {
