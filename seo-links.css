@@ -1,0 +1,4 @@
+/* New descriptive links only: keep the existing page typography and motion. */
+.seo-detail-link{display:inline-flex;align-items:center;gap:18px;min-height:44px;margin-top:14px;font:inherit;font-size:15px;font-weight:570;color:inherit;text-decoration:underline;text-underline-offset:5px}
+.seo-detail-link span{color:#a3402b}
+.seo-detail-link:focus-visible{outline:3px solid #a3402b;outline-offset:5px}
