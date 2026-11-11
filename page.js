@@ -273,9 +273,9 @@
     var root = document.documentElement;
     var button = document.querySelector('[data-body-motion-toggle]');
     var status = document.querySelector('[data-body-motion-status]');
-    var storageKey = 'fosho-v3-body-motion';
-    var choice = null;
-    try { choice = window.sessionStorage.getItem(storageKey); } catch (error) { /* Preference storage is optional. */ }
+    var storageKey = 'fosho-v3-body-motion-v2';
+    var choice = 'on';
+    try { choice = window.sessionStorage.getItem(storageKey) === 'off' ? 'off' : 'on'; } catch (error) { /* Preference storage is optional. */ }
 
     function finish(record) {
       record.done = true;
@@ -304,10 +304,10 @@
       if (media) media.revert();
       media = gsap.matchMedia();
       try {
-        media.add({ active: 'all', compact: '(max-width: 700px)', reduced: '(prefers-reduced-motion: reduce)' }, function (context) {
+        media.add({ active: 'all', compact: '(max-width: 700px)' }, function (context) {
           var compact = context.conditions.compact;
           // Body motion is an explicit, independent preference; Lenis is unchanged.
-          var reduced = choice === 'off' || (choice !== 'on' && context.conditions.reduced);
+          var reduced = choice === 'off';
           var threshold = compact ? .82 : .78;
           root.dataset.bodyMotion = reduced ? 'reduced' : 'full';
           if (button && status) {

@@ -4,9 +4,9 @@
   var root = document.documentElement;
   var button = document.querySelector('[data-smooth-toggle]');
   var status = document.querySelector('[data-smooth-status]');
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var storageKey = 'fosho-v3-smooth-scroll';
-  var choice = null;
+  // New defaults ignore legacy auto-off state; an explicit new choice is kept.
+  var storageKey = 'fosho-v3-smooth-scroll-v2';
+  var choice = 'on';
   var lenis = null;
   var tick = null;
   var navigationFrame = 0;
@@ -15,7 +15,7 @@
   var gsap = window.gsap;
   var triggers = window.ScrollTrigger;
   if (!window.Lenis || !gsap || !triggers || !button || !status) return;
-  try { choice = window.sessionStorage.getItem(storageKey); } catch (error) { /* Storage is optional. */ }
+  try { choice = window.sessionStorage.getItem(storageKey) === 'off' ? 'off' : 'on'; } catch (error) { /* Storage is optional. */ }
 
   function resize() { if (lenis) lenis.resize(); }
 
@@ -31,7 +31,7 @@
 
   function configure() {
     destroy();
-    var enabled = choice === 'on' || (choice !== 'off' && !reduced.matches);
+    var enabled = choice !== 'off';
     if (enabled) {
       try {
         lenis = new window.Lenis({
@@ -41,8 +41,8 @@
           smoothWheel: true,
           syncTouch: false,
           anchors: false,
-          // Only the visitor's explicit per-tab opt-in overrides OS reduce.
-          respectReducedMotion: choice !== 'on'
+          // The approved site default is on; the footer remains an explicit opt-out.
+          respectReducedMotion: false
         });
         lenis.on('scroll', triggers.update);
         tick = function (time) { lenis.raf(time * 1000); };
@@ -126,11 +126,6 @@
     button.addEventListener('click', function () {
       choice = lenis ? 'off' : 'on';
       try { window.sessionStorage.setItem(storageKey, choice); } catch (error) { /* Native fallback remains usable. */ }
-      configure();
-    });
-    reduced.addEventListener('change', function () {
-      choice = null;
-      try { window.sessionStorage.removeItem(storageKey); } catch (error) { /* Optional. */ }
       configure();
     });
     document.addEventListener('click', navigate);
