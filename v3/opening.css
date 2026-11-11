@@ -1,7 +1,7 @@
 /* V2 opening copied into V3 without changing its type scale or breakpoints. */
 @font-face {
-  font-family: "Pretendard Variable";
-  src: url("../assets/fonts/PretendardVariable.woff2") format("woff2");
+  font-family: "Fosho Site";
+  src: url("../assets/fonts/FoshoSiteSubset.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -21,7 +21,7 @@
   --gutter: clamp(22px, 5.15vw, 80px);
   --measure: 1320px;
   --ease-out: cubic-bezier(.19, 1, .22, 1);
-  font-family: "Pretendard Variable", Pretendard, sans-serif;
+  font-family: "Fosho Site", "Pretendard Variable", Pretendard, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -45,7 +45,7 @@ body {
   overflow-wrap: break-word;
 }
 
-body, button, a { font-family: "Pretendard Variable", Pretendard, sans-serif; }
+body, button, a { font-family: "Fosho Site", "Pretendard Variable", Pretendard, sans-serif; }
 a { color: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a:focus-visible, button:focus-visible {

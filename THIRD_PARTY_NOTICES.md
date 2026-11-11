@@ -10,6 +10,8 @@ The files `assets/vendor/gsap.min.js` and `assets/vendor/ScrollTrigger.min.js` a
 
 The font in `assets/fonts/PretendardVariable.woff2` is accompanied by its license notice at `assets/fonts/OFL.txt`.
 
+`assets/fonts/FoshoSiteSubset.woff2` is a character subset derived from that font, under the same SIL Open Font License. Its internal font name is changed to respect the original Reserved Font Names. Copyright and license records, original glyph shapes, advance widths, and the variable weight axis are retained. The full OFL notice remains at `assets/fonts/OFL.txt`.
+
 ## Lenis 1.3.27
 
 Copyright (c) 2024 darkroom.engineering. MIT License.

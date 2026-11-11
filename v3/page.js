@@ -265,16 +265,24 @@
       if (node) nodes.push(node);
     });
     var records = nodes.map(function (node) {
-      return { node: node, done: false, tween: null, trigger: null, top: 0 };
+      var photo = node.matches('.work-photo');
+      return { node: node, visual: photo ? node.querySelector('img') : node,
+        photo: photo, done: false, tween: null, trigger: null, top: 0 };
     });
-    var media = gsap.matchMedia();
+    var media = null;
+    var root = document.documentElement;
+    var button = document.querySelector('[data-body-motion-toggle]');
+    var status = document.querySelector('[data-body-motion-status]');
+    var storageKey = 'fosho-v3-body-motion';
+    var choice = null;
+    try { choice = window.sessionStorage.getItem(storageKey); } catch (error) { /* Preference storage is optional. */ }
 
     function finish(record) {
       record.done = true;
       if (record.tween) record.tween.kill();
       if (record.trigger) record.trigger.kill();
       record.tween = record.trigger = null;
-      gsap.set(record.node, { clearProps: 'transform,opacity' });
+      gsap.set(record.visual, { clearProps: 'transform,opacity,clipPath' });
       record.node.dataset.bodyReveal = 'done';
     }
 
@@ -292,71 +300,96 @@
       catch (error) { /* An invalid hash must not conceal readable HTML. */ }
     }
 
-    try {
-      media.add({ active: 'all', compact: '(max-width: 700px)', reduced: '(prefers-reduced-motion: reduce)' }, function (context) {
-        var compact = context.conditions.compact;
-        var reduced = context.conditions.reduced;
-        var distance = reduced ? 8 : compact ? 22 : 36;
-        var duration = compact || reduced ? .6 : .75;
-        // Read untransformed row positions before arming any of the entrances.
-        records.forEach(function (record) { record.top = record.node.getBoundingClientRect().top; });
-        records.forEach(function (record) {
-          if (record.done || record.top < window.innerHeight * .86 || record.node.contains(document.activeElement)) {
-            finish(record);
-            return;
+    function rebuild() {
+      if (media) media.revert();
+      media = gsap.matchMedia();
+      try {
+        media.add({ active: 'all', compact: '(max-width: 700px)', reduced: '(prefers-reduced-motion: reduce)' }, function (context) {
+          var compact = context.conditions.compact;
+          // Body motion is an explicit, independent preference; Lenis is unchanged.
+          var reduced = choice === 'off' || (choice !== 'on' && context.conditions.reduced);
+          var threshold = compact ? .82 : .78;
+          root.dataset.bodyMotion = reduced ? 'reduced' : 'full';
+          if (button && status) {
+            button.hidden = false;
+            button.setAttribute('aria-pressed', String(!reduced));
+            status.textContent = reduced ? '줄임' : '켜짐';
           }
-          var group = record.node.closest('.concerns, .working-principles, .process-groups');
-          var row = !compact && group ? records.filter(function (sibling) {
-            return group.contains(sibling.node) && Math.abs(sibling.top - record.top) < 4;
-          }) : [];
-          var delay = Math.min(.2, Math.max(0, row.indexOf(record)) * .1);
-          gsap.set(record.node, { y: distance, opacity: 0 });
-          record.node.dataset.bodyReveal = 'pending';
-          function play() {
-            if (record.done || record.tween) return;
-            record.node.dataset.bodyReveal = 'playing';
-            record.tween = gsap.to(record.node, {
-              y: 0, opacity: 1, duration: duration, delay: delay, ease: 'power2.out',
-              onComplete: function () { finish(record); }
-            });
-          }
-          record.trigger = window.ScrollTrigger.create({
-            trigger: record.node,
-            start: 'top 86%',
-            end: 'bottom top',
-            onEnter: play,
-            // Fast jumps should finish skipped content, never queue it offscreen.
-            onLeave: function () { finish(record); },
-            onEnterBack: function () { finish(record); }
-          });
-        });
-        showHash();
-        return function () {
+          // Read untransformed row positions before arming any of the entrances.
+          records.forEach(function (record) { record.top = record.node.getBoundingClientRect().top; });
           records.forEach(function (record) {
-            if (record.tween) record.tween.kill();
-            if (record.trigger) record.trigger.kill();
-            record.tween = record.trigger = null;
-            gsap.set(record.node, { clearProps: 'transform,opacity' });
+            if (record.done || record.top < window.innerHeight * threshold || record.node.contains(document.activeElement)) {
+              finish(record);
+              return;
+            }
+            var group = record.node.closest('.concerns, .working-principles, .process-groups');
+            var row = !compact && group ? records.filter(function (sibling) {
+              return group.contains(sibling.node) && Math.abs(sibling.top - record.top) < 4;
+            }) : [];
+            var introduction = record.node.matches('.situation-intro, .expertise-intro-copy, .plans-intro, .process-heading, .individual-intro, .inquiry-top');
+            var distance = reduced ? 0 : record.photo ? (compact ? 24 : 28) : introduction ? (compact ? 30 : 44) : (compact ? 36 : 56);
+            var duration = reduced ? .65 : record.photo ? (compact ? 1.15 : 1.25) : introduction ? (compact ? .95 : 1.1) : (compact ? 1 : 1.15);
+            var delay = reduced ? 0 : Math.min(.28, Math.max(0, row.indexOf(record)) * .14);
+            var initial = { y: distance, opacity: 0 };
+            if (record.photo && !reduced) initial.clipPath = 'inset(0% 0% 16% 0%)';
+            gsap.set(record.visual, initial);
+            record.node.dataset.bodyReveal = 'pending';
+            function play() {
+              if (record.done || record.tween) return;
+              record.node.dataset.bodyReveal = 'playing';
+              var movement = { y: 0, duration: duration, ease: 'power1.out' };
+              if (record.photo && !reduced) movement.clipPath = 'inset(0% 0% 0% 0%)';
+              record.tween = gsap.timeline({ delay: delay,
+                onComplete: function () { finish(record); }
+              }).to(record.visual, movement, 0)
+                .to(record.visual, { opacity: 1, duration: duration * (reduced ? 1 : .78), ease: 'power1.out' }, 0);
+            }
+            record.trigger = window.ScrollTrigger.create({
+              trigger: record.node,
+              start: 'top ' + (threshold * 100) + '%',
+              end: 'bottom top',
+              onEnter: play,
+              // Fast jumps should finish skipped content, never queue it offscreen.
+              onLeave: function () { finish(record); },
+              onEnterBack: function () { finish(record); }
+            });
           });
-        };
-      });
-      window.addEventListener('hashchange', showHash);
-      document.addEventListener('focusin', function (event) {
-        records.forEach(function (record) {
-          if (!record.done && record.node.contains(event.target)) finish(record);
+          showHash();
+          return function () {
+            records.forEach(function (record) {
+              if (record.tween) record.tween.kill();
+              if (record.trigger) record.trigger.kill();
+              record.tween = record.trigger = null;
+              gsap.set(record.visual, { clearProps: 'transform,opacity,clipPath' });
+            });
+          };
         });
-      });
-      document.addEventListener('click', function (event) {
-        var anchor = event.target.closest('a[href^="#"]');
-        if (!anchor || anchor.hash === '#top') return;
-        try { showDestination(document.getElementById(decodeURIComponent(anchor.hash.substring(1)))); }
-        catch (error) { /* Native navigation still handles malformed links. */ }
-      });
-    } catch (error) {
-      media.revert();
-      records.forEach(finish);
-      console.warn('Fosho body content remains visible without its entrances.', error);
+      } catch (error) {
+        media.revert();
+        records.forEach(finish);
+        if (button) button.hidden = true;
+        console.warn('Fosho body content remains visible without its entrances.', error);
+      }
     }
+    rebuild();
+    if (button) button.addEventListener('click', function () {
+      choice = root.dataset.bodyMotion === 'full' ? 'off' : 'on';
+      try { window.sessionStorage.setItem(storageKey, choice); } catch (error) { /* The current tab can still use its choice. */ }
+      rebuild();
+      window.ScrollTrigger.refresh();
+    });
+    window.addEventListener('hashchange', showHash);
+    document.addEventListener('focusin', function (event) {
+      records.forEach(function (record) {
+        if (!record.done && record.node.contains(event.target)) finish(record);
+      });
+    });
+    document.addEventListener('click', function (event) {
+      var anchor = event.target.closest('a[href^="#"]');
+      if (!anchor || anchor.hash === '#top') return;
+      try { showDestination(document.getElementById(decodeURIComponent(anchor.hash.substring(1)))); }
+      catch (error) { /* Native navigation still handles malformed links. */ }
+    });
   }
 
   function init() {

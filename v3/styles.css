@@ -274,3 +274,23 @@ address { font-style: normal; }
   .opening-graphic { right: -38%; bottom: .15em; font-size: 78vw; }
   .partnership-split-word { font-size: clamp(90px,24vw,130px); }
 }
+
+/* Approved photographs: preserve the existing type, service grid and motion. */
+.work-photo { min-width: 0; margin: 0; overflow: hidden; }
+.work-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.expertise-intro-copy { min-width: 0; }
+.expertise-intro-copy p { margin-top: 24px; }
+.expertise-intro-copy .text-link { margin-top: 34px; }
+.service-photo { aspect-ratio: 4 / 3; }
+.collaboration-photo { aspect-ratio: 2 / 1; margin-top: 64px; }
+[data-body-motion-status] { text-decoration: underline; text-underline-offset: 4px; }
+@media (min-width:701px) and (max-width:1023px) {
+  .footer-inner { flex-wrap: wrap; }
+}
+@media (max-width:700px) {
+  .expertise-intro-copy p { margin-top: 20px; }
+  .expertise-intro-copy .text-link { margin-top: 15px; }
+  .service-photo { aspect-ratio: 16 / 10; margin-top: 28px; }
+  .collaboration-photo { aspect-ratio: 4 / 3; margin-top: 40px; }
+  .collaboration-photo img { object-position: 55% center; }
+}
