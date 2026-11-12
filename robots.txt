@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://huynjuunn-glitch.github.io/fosho-homepage-site/sitemap.xml
+Sitemap: https://fosho.co.kr/sitemap.xml
