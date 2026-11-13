@@ -2,11 +2,6 @@
 (function () {
   'use strict';
   var root = document.documentElement;
-  var button = document.querySelector('[data-smooth-toggle]');
-  var status = document.querySelector('[data-smooth-status]');
-  // New defaults ignore legacy auto-off state; an explicit new choice is kept.
-  var storageKey = 'fosho-v3-smooth-scroll-v2';
-  var choice = 'on';
   var lenis = null;
   var tick = null;
   var navigationFrame = 0;
@@ -14,8 +9,7 @@
   var focusCleanup = null;
   var gsap = window.gsap;
   var triggers = window.ScrollTrigger;
-  if (!window.Lenis || !gsap || !triggers || !button || !status) return;
-  try { choice = window.sessionStorage.getItem(storageKey) === 'off' ? 'off' : 'on'; } catch (error) { /* Storage is optional. */ }
+  if (!window.Lenis || !gsap || !triggers) return;
 
   function resize() { if (lenis) lenis.resize(); }
 
@@ -31,31 +25,26 @@
 
   function configure() {
     destroy();
-    var enabled = choice !== 'off';
-    if (enabled) {
-      try {
-        lenis = new window.Lenis({
-          autoRaf: false,
-          lerp: .14,
-          wheelMultiplier: 1,
-          smoothWheel: true,
-          syncTouch: false,
-          anchors: false,
-          // The approved site default is on; the footer remains an explicit opt-out.
-          respectReducedMotion: false
-        });
-        lenis.on('scroll', triggers.update);
-        tick = function (time) { lenis.raf(time * 1000); };
-        gsap.ticker.add(tick);
-        gsap.ticker.lagSmoothing(0);
-      } catch (error) {
-        destroy();
-        console.warn('Fosho smooth scrolling is using native scrolling.', error);
-      }
+    try {
+      lenis = new window.Lenis({
+        autoRaf: false,
+        lerp: .14,
+        wheelMultiplier: 1,
+        smoothWheel: true,
+        syncTouch: false,
+        anchors: false,
+        // The approved site default is on.
+        respectReducedMotion: false
+      });
+      lenis.on('scroll', triggers.update);
+      tick = function (time) { lenis.raf(time * 1000); };
+      gsap.ticker.add(tick);
+      gsap.ticker.lagSmoothing(0);
+    } catch (error) {
+      destroy();
+      console.warn('Fosho smooth scrolling is using native scrolling.', error);
     }
     root.dataset.smoothScroll = lenis ? 'on' : 'off';
-    button.setAttribute('aria-pressed', String(!!lenis));
-    status.textContent = lenis ? '켜짐' : '꺼짐';
     resize();
   }
 
@@ -122,12 +111,6 @@
 
   function init() {
     configure();
-    button.hidden = false;
-    button.addEventListener('click', function () {
-      choice = lenis ? 'off' : 'on';
-      try { window.sessionStorage.setItem(storageKey, choice); } catch (error) { /* Native fallback remains usable. */ }
-      configure();
-    });
     document.addEventListener('click', navigate);
     window.addEventListener('popstate', syncHistoryNavigation);
     window.addEventListener('hashchange', syncHistoryNavigation);

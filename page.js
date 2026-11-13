@@ -271,11 +271,6 @@
     });
     var media = null;
     var root = document.documentElement;
-    var button = document.querySelector('[data-body-motion-toggle]');
-    var status = document.querySelector('[data-body-motion-status]');
-    var storageKey = 'fosho-v3-body-motion-v2';
-    var choice = 'on';
-    try { choice = window.sessionStorage.getItem(storageKey) === 'off' ? 'off' : 'on'; } catch (error) { /* Preference storage is optional. */ }
 
     function finish(record) {
       record.done = true;
@@ -306,15 +301,10 @@
       try {
         media.add({ active: 'all', compact: '(max-width: 700px)' }, function (context) {
           var compact = context.conditions.compact;
-          // Body motion is an explicit, independent preference; Lenis is unchanged.
-          var reduced = choice === 'off';
+          // The approved body reveal remains enabled without a footer control.
+          var reduced = false;
           var threshold = compact ? .82 : .78;
           root.dataset.bodyMotion = reduced ? 'reduced' : 'full';
-          if (button && status) {
-            button.hidden = false;
-            button.setAttribute('aria-pressed', String(!reduced));
-            status.textContent = reduced ? '줄임' : '켜짐';
-          }
           // Read untransformed row positions before arming any of the entrances.
           records.forEach(function (record) { record.top = record.node.getBoundingClientRect().top; });
           records.forEach(function (record) {
@@ -367,17 +357,10 @@
       } catch (error) {
         media.revert();
         records.forEach(finish);
-        if (button) button.hidden = true;
         console.warn('Fosho body content remains visible without its entrances.', error);
       }
     }
     rebuild();
-    if (button) button.addEventListener('click', function () {
-      choice = root.dataset.bodyMotion === 'full' ? 'off' : 'on';
-      try { window.sessionStorage.setItem(storageKey, choice); } catch (error) { /* The current tab can still use its choice. */ }
-      rebuild();
-      window.ScrollTrigger.refresh();
-    });
     window.addEventListener('hashchange', showHash);
     document.addEventListener('focusin', function (event) {
       records.forEach(function (record) {
